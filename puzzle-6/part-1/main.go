@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// race struct represents a racing scenario with a given time and record distance.
 const inputFile = "input.txt"
 
 type race struct {
@@ -16,6 +17,9 @@ type race struct {
 	distanceMm int
 }
 
+// countWaysOfWinning calculates the number of ways the race can be won.
+// This is determined by the number of times the distance reached is greater than the race's record distance,
+// within the given time limit.
 func (r *race) countWaysOfWinning() int {
 	count := 0
 	for i := 0; i <= r.timeMs; i++ {
@@ -27,6 +31,9 @@ func (r *race) countWaysOfWinning() int {
 	return count
 }
 
+// calculateDistanceReached calculates the distance reached based on a given press time.
+// It returns the product of the press time and the remaining travel time, but returns 0 if
+// the press time is not within the valid range.
 func (r *race) calculateDistanceReached(pressTimeMs int) int {
 	if pressTimeMs >= r.timeMs || pressTimeMs <= 0 {
 		return 0
@@ -52,27 +59,36 @@ func readFileLines(filePath string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func parseRace(lines [2]string) (race, error) {
-	timeParts := strings.Fields(strings.Split(lines[0], ":")[1])
-	distanceParts := strings.Fields(strings.Split(lines[1], ":")[1])
+// parseRaces takes an array of strings representing the race time and distance, and parses them into a race slice.
+// It splits the input strings to extract time and distance, converts them to integers,
+// and handles any format errors in the input data.
+func parseRaces(lines [2]string) ([]race, error) {
+	times := strings.Fields(strings.Split(lines[0], ":")[1])
+	distances := strings.Fields(strings.Split(lines[1], ":")[1])
 
-	time := strings.Join(timeParts, "")
-	distance := strings.Join(distanceParts, "")
-
-	timeInt, errTime := strconv.Atoi(time)
-	if errTime != nil {
-		return race{}, fmt.Errorf("cannot parse races: bad time format: %s", time)
+	if len(times) != len(distances) {
+		return []race{}, fmt.Errorf("cannot parse races: different number of times (%d) and distances (%d)", len(times), len(distances))
 	}
 
-	distanceInt, errDistance := strconv.Atoi(distance)
-	if errDistance != nil {
-		return race{}, fmt.Errorf("cannot parse races: bad distance format: %s", distance)
+	races := []race{}
+	for i := range times {
+		timeInt, errTime := strconv.Atoi(times[i])
+		if errTime != nil {
+			return []race{}, fmt.Errorf("cannot parse races: bad time format: %s", times[i])
+		}
+
+		distanceInt, errDistance := strconv.Atoi(distances[i])
+		if errDistance != nil {
+			return []race{}, fmt.Errorf("cannot parse races: bad distance format: %s", distances[i])
+		}
+
+		races = append(races, race{
+			timeMs:     timeInt,
+			distanceMm: distanceInt,
+		})
 	}
 
-	return race{
-		timeMs:     timeInt,
-		distanceMm: distanceInt,
-	}, nil
+	return races, nil
 }
 
 func main() {
@@ -81,10 +97,18 @@ func main() {
 		log.Fatal(errRead)
 	}
 
-	race, errRace := parseRace(*(*[2]string)(lines[0:2])) // Call parseRaces with the 2 first lines of the input.
-	if errRace != nil {
-		log.Fatal(errRace)
+	races, errRaces := parseRaces(*(*[2]string)(lines[0:2])) // Call parseRaces with the 2 first lines of the input.
+	if errRaces != nil {
+		log.Fatal(errRaces)
 	}
 
-	fmt.Println(race.countWaysOfWinning())
+	prod := 0
+	if len(races) > 0 {
+		prod = races[0].countWaysOfWinning()
+		for i := 1; i < len(races); i++ {
+			prod *= races[i].countWaysOfWinning()
+		}
+	}
+
+	fmt.Println(prod)
 }
