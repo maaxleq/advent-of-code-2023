@@ -10,6 +10,10 @@ import (
 
 const inputFile = "input.txt"
 
+// hashAlgorithm calculates a simple hash of a given string.
+// It iterates through each character in the string, converting it to an integer
+// and performing a series of calculations to produce a hash value.
+// The function returns an integer representing the hash.
 func hashAlgorithm(s string) int {
 	val := 0
 
@@ -22,6 +26,8 @@ func hashAlgorithm(s string) int {
 	return val
 }
 
+// parseSteps splits a string by commas and returns a slice of the substrings.
+// It is used to process a line of text into individual steps or commands.
 func parseSteps(line string) []string {
 	return strings.Split(line, ",")
 }
